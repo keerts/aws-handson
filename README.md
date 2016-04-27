@@ -1,13 +1,13 @@
 # Hands on aws tech day
 
-These are the hands on assignments for the AWS tech day on April 28 at Avisi.
+These are the hands-on assignments for the AWS tech day on April 28 at Avisi.
 
 If you weren't there, there might be not much use in this repository for you.
 
 # Get started
 
-1) Just log into the AWS console with the username/password and play around.
-2) Install the CLI and follow the instructions
+1. Just log into the AWS console with the username/password and play around.
+2. Install the CLI and follow the instructions
 
 If you have questions, come to the HipChat room at: https://www.hipchat.com/gajDKStLg
 
@@ -25,10 +25,10 @@ https://001194245973.signin.aws.amazon.com/console
 
 Install the command line interface.
 
-OXS: brew install awscli
-Arch Linux: https://aur.archlinux.org/packages/aws-cli/
+- OXS: brew install awscli
+- Arch Linux: https://aur.archlinux.org/packages/aws-cli/
 
-General: http://docs.aws.amazon.com/cli/latest/userguide/installing.html
+- General: http://docs.aws.amazon.com/cli/latest/userguide/installing.html
 
 # Configure the CLI
 
@@ -42,7 +42,7 @@ Default region name [None]: us-east-1
 Default output format [None]: json
 ```
 
-NOTE: techday4, bij region, maak hier us-west-1 van!
+NOTE: techday4, for region, pick us-west-1!
 
 For more information, or if you already have another account configured, see http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
 
