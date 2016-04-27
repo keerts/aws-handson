@@ -1,0 +1,1028 @@
+{
+
+  "Parameters" : {
+
+    "TransactorInstanceType" : {
+      "Description" : "Transactor EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium", "m1.small", "m1.medium", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge", "c1.medium", "c1.xlarge", "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge", "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge", "g2.2xlarge", "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge", "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge", "d2.xlarge", "d2.2xlarge", "d2.4xlarge", "d2.8xlarge", "hi1.4xlarge", "hs1.8xlarge", "cr1.8xlarge", "cc2.8xlarge", "cg1.4xlarge"]
+      ,
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "KeyName" : {
+      "Default": "techday3",
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    }
+  },
+
+  "Conditions" : {
+    "Production" : {"Fn::Equals" : [{"Ref" : "AWS::StackName"}, "production"]},
+    "Test" : {"Fn::Equals" : [{"Ref" : "AWS::StackName"}, "test"]}
+  },
+
+  "Mappings" : {
+
+    "Environments" : {
+      "production" : {
+        "DatabaseTableName" : "ProductionRelationsForJira",
+        "AltHost" : "curl http:\/\/169.254.169.254\/latest\/meta-data\/local-ipv4",
+        "LoadBalancerName" : "RelationsForJiraLoadBalancer",
+        "CertificateArn" : "arn:aws:iam::718413692908:server-certificate/app.relationsforjira.com",
+        "MinWebServerInstances" : 2
+      },
+      "test" : {
+        "DatabaseTableName" : "TestRelationsForJira",
+        "AltHost" : "curl http:\/\/169.254.169.254\/latest\/meta-data\/public-hostname",
+        "LoadBalancerName" : "TestRelationsForJiraLoadBalancer",
+        "CertificateArn" : "arn:aws:iam::718413692908:server-certificate/test.relationsforjira.com",
+        "MinWebServerInstances" : 1
+      }
+    },
+
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "PV64"   },
+      "t2.micro"    : { "Arch" : "HVM64"  },
+      "t2.small"    : { "Arch" : "HVM64"  },
+      "t2.medium"   : { "Arch" : "HVM64"  },
+      "m1.small"    : { "Arch" : "PV64"   },
+      "m1.medium"   : { "Arch" : "PV64"   },
+      "m1.large"    : { "Arch" : "PV64"   },
+      "m1.xlarge"   : { "Arch" : "PV64"   },
+      "m2.xlarge"   : { "Arch" : "PV64"   },
+      "m2.2xlarge"  : { "Arch" : "PV64"   },
+      "m2.4xlarge"  : { "Arch" : "PV64"   },
+      "m3.medium"   : { "Arch" : "HVM64"  },
+      "m3.large"    : { "Arch" : "HVM64"  },
+      "m3.xlarge"   : { "Arch" : "HVM64"  },
+      "m3.2xlarge"  : { "Arch" : "HVM64"  },
+      "c1.medium"   : { "Arch" : "PV64"   },
+      "c1.xlarge"   : { "Arch" : "PV64"   },
+      "c3.large"    : { "Arch" : "HVM64"  },
+      "c3.xlarge"   : { "Arch" : "HVM64"  },
+      "c3.2xlarge"  : { "Arch" : "HVM64"  },
+      "c3.4xlarge"  : { "Arch" : "HVM64"  },
+      "c3.8xlarge"  : { "Arch" : "HVM64"  },
+      "c4.large"    : { "Arch" : "HVM64"  },
+      "c4.xlarge"   : { "Arch" : "HVM64"  },
+      "c4.2xlarge"  : { "Arch" : "HVM64"  },
+      "c4.4xlarge"  : { "Arch" : "HVM64"  },
+      "c4.8xlarge"  : { "Arch" : "HVM64"  },
+      "g2.2xlarge"  : { "Arch" : "HVMG2"  },
+      "r3.large"    : { "Arch" : "HVM64"  },
+      "r3.xlarge"   : { "Arch" : "HVM64"  },
+      "r3.2xlarge"  : { "Arch" : "HVM64"  },
+      "r3.4xlarge"  : { "Arch" : "HVM64"  },
+      "r3.8xlarge"  : { "Arch" : "HVM64"  },
+      "i2.xlarge"   : { "Arch" : "HVM64"  },
+      "i2.2xlarge"  : { "Arch" : "HVM64"  },
+      "i2.4xlarge"  : { "Arch" : "HVM64"  },
+      "i2.8xlarge"  : { "Arch" : "HVM64"  },
+      "d2.xlarge"   : { "Arch" : "HVM64"  },
+      "d2.2xlarge"  : { "Arch" : "HVM64"  },
+      "d2.4xlarge"  : { "Arch" : "HVM64"  },
+      "d2.8xlarge"  : { "Arch" : "HVM64"  },
+      "hi1.4xlarge" : { "Arch" : "HVM64"  },
+      "hs1.8xlarge" : { "Arch" : "HVM64"  },
+      "cr1.8xlarge" : { "Arch" : "HVM64"  },
+      "cc2.8xlarge" : { "Arch" : "HVM64"  }
+    },
+
+    "AWSRegionArch2AMI" : {
+      "us-east-1"        : {"HVM64" : "ami-08111162"}
+    },
+
+    "ECSRegionArch2AMI" : {
+      "us-east-1"        : {"HVM64" : "ami-67a3a90d"}
+    },
+
+    "Admins" : {
+      "gerstree" : { "sshPublicKey" : "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCA95WcHyt5bSrMp4kn2S7A3xOWJSKtXCEOTSWTrPl9UxkQ7TXfKLMgl4N1yR9mu3z54V6Uldgitb7PKSU+wxoXFL2R15Y8fSVLHhWyfEE4TYqqOzxZUnMzqV5y8nIky5mJ6POBUXPowKDCMDAj0qpOHbFJ8nbuwHWFwwNZyIvY9OKzWcgrtnTwkhL1eJC12HcaauLbBSEGS/H+QPLPRvNUrrcrEV+jTXZHVBKUtyRag0WTt38EhykdDb1KIKREe6k4+UgQ1FjhBOzA5Xgu2cVG1FxUPcrTpM3n0wgGt4+lUjD/8sxxnq6uQWdVIvG/xzC4pdSnwJwzeDtDNgmqTtz9 gerstree" },
+      "mitkuijp" : { "sshPublicKey" : "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQChodOylnC52MCjJVOeyPdemL/q0c6ZuysCn6AsvYzwCN04xNMxRS9N7dmKUkzzjkbZ8+eDLeF6UFmo8X4uqCH1gKdSm/YSub/5iJmBqfxjrkmWLDP3cikGrLnZt7ggF+0sqKJTMVr1aeO9X06eiJU0dwZpUijo5hZM3ud+rL8XazJjHNXlS+vzV8lmEueeDkPhWKM++D5caSePknqsVIp7Ble9pTvkjzWc5Sk6PHiTwOklScoQaiRaU2VZX5zShWoioxl9suLFDEvW1QbO+8Y0ve375iTcUw1X5Uw2Oz19To/gnBvntsTTYWNnyTGXjd/oKTCVCj2sCIlzJlQGynwV mitkuijp" },
+      "matstijl" : { "sshPublicKey" : "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDl8FBTfCfLr7fGpAOfHdRYk1mnSibr04ik2zgdboN8XMN/hVN63IhLQ+sfHz0jL3kf41OQdCrzgghBy2tvXfB1CTNS1fq61S8kxeTQBJTLnfQvsetuAMfTFiZcAUamRF0atg59rusy8qPsUPBq/olAmNPUZfg96LKi7g3rszIz96/uWf8dCrcc23qcz4no62r+LKYyDetGRBrz//XbenRHnSE/KXRJj1pgmJzueEjq/eAwhgXFAtWjPk+qIYhYy7ElGOCA1aNiJpAXKfD60JBj3oAvwUjZeX3n9QHOO9JsJmr9FOvgaAGadaaCcG3QG7h8eDNzi6/uC+RFafLoil4f matstijl" },
+      "tomtheun" : { "sshPublicKey" : "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7bQbSAzfiYl1YpcGMA9je4mzCn74ZSaZSvq+z96bNx3TAERRTUkjvoyBork8VC1f1JKig050rajmr0IYv09YYuAFgY04MdYrYvyaOoNIIVPG0C3EPwZh6WXd4QDO+Qw5WfH7Ibu/B64wzY8KRKsGb/fFge475eKITks9d1g46g1NJEcQ61FZ5XFqzrk+qus3/T4b5a6tJMRrfLFowLR1Rc2S1VLzGB8DElbrBC+omTRlv6U19oPZsWEUnkQVoI+/hnMycK+S8kjV+Dq3XJ3CCWQSN36oOMSCH297NhE8qK4SubIIznLIm0lnUsSpqb5lKaoghoeaBGHYshiX4P4eZ tomtheun" }
+    },
+
+    "AvisiIPAdresses" : {
+      "vpn" : { "ip" : "95.142.96.205/32" },
+      "office-fiber" : { "ip" : "90.145.204.133/32" },
+      "office-adsl" : { "ip" : "80.101.217.42/32" }
+    }
+  },
+
+  "Resources" : {
+
+    "WebServerGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn" : "TransactorGroup",
+      "Properties" : {
+        "AvailabilityZones" : { "Fn::GetAZs" : "" },
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "MinWebServerInstances"] },
+        "MaxSize" : "2",
+        "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ]
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT15M"
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime" : "PT15M",
+          "WaitOnResourceSignals": "true"
+        }
+      }
+    },
+
+    "LaunchConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "Comment" : "Install a simple application",
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+              "yum" : {
+                "apache-commons-daemon-jsvc.x86_64" : [],
+                "awslogs" : []
+              }
+            },
+
+            "files" : {
+              "/home/ec2-user/.ssh/authorized_keys" : {
+                "content" : { "Fn::Join" : ["", [
+                  { "Fn::FindInMap" : [ "Admins", "gerstree", "sshPublicKey"] }, "\n",
+                  { "Fn::FindInMap" : [ "Admins", "mitkuijp", "sshPublicKey"] }, "\n",
+                  { "Fn::FindInMap" : [ "Admins", "matstijl", "sshPublicKey"] }, "\n",
+                  { "Fn::FindInMap" : [ "Admins", "tomtheun", "sshPublicKey"] }, "\n"
+                ]] },
+                "mode" : "000600",
+                "owner" : "ec2-user",
+                "group" : "ec2-user"
+              },
+
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource LaunchConfig ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]}
+              },
+
+              "/etc/awslogs/awslogs.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[general]\n",
+                  "state_file = /var/lib/awslogs/agent-state\n",
+                  "\n",
+                  "[/var/log/relations.log]\n",
+                  "datetime_format = %Y-%m-%d %H:%M:%S,%f \n",
+                  "file = /var/log/relations.log\n",
+                  "buffer_duration = 5000\n",
+                  "log_stream_name = {instance_id}\n",
+                  "initial_position = end_of_file\n",
+                  "log_group_name = relations.log-", { "Ref" : "AWS::StackName" }, "\n"
+                ]]}
+              }
+            },
+
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]
+                },
+                "codedeploy-agent": {
+                  "enabled": "true",
+                  "ensureRunning": "true"
+                },
+                "awslogs" : {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files" : ["/etc/awslogs/awscli.conf", "/etc/awslogs/awslogs.conf"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : {
+          "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ]
+        },
+        "SecurityGroups" : [ { "Ref" : "SSHSecurityGroup" }, { "Ref" : "InstanceSecurityGroup" }, { "Ref" : "StatsSecurityGroup" } ],
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "IamInstanceProfile": { "Ref": "ApplicationInstanceProfile" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1", "\n",
+          "yum update -y aws-cfn-bootstrap", "\n",
+
+          "# Helper function.\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource WebServerGroup ",
+          "         --region ", { "Ref" : "AWS::Region" }, "\n",
+          "  exit 1\n",
+          "}\n",
+
+          "mkdir -p /opt", "\n",
+          "cd /opt", "\n",
+          "aws s3 cp s3://third-party-releases/jdk-8u51-linux-x64.tar.gz .", " || error_exit 'Failed to download the jdk' \n",
+          "tar -zxvf jdk-8u51-linux-x64.tar.gz ", " || error_exit 'Failed to unpack the jdk' \n",
+
+          "# Install the AWS CodeDeploy Agent.\n",
+          "cd /home/ec2-user/\n",
+          "aws s3 cp 's3://aws-codedeploy-us-east-1/latest/codedeploy-agent.noarch.rpm' . || error_exit 'Failed to download AWS CodeDeploy Agent.'\n",
+          "yum -y install codedeploy-agent.noarch.rpm || error_exit 'Failed to install AWS CodeDeploy Agent.' \n",
+
+          "/opt/aws/bin/cfn-init -v ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource LaunchConfig ",
+          "         --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init.' \n",
+
+
+          "/opt/aws/bin/cfn-signal --success true ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource WebServerGroup ",
+          "         --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      }
+    },
+
+    "TransactorGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn" : [ "DatomicCluster"],
+      "Properties" : {
+        "AvailabilityZones" : { "Fn::GetAZs" : "" },
+        "LaunchConfigurationName" : { "Ref" : "TransactorLaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "2",
+        "TerminationPolicies" : [ "OldestInstance","ClosestToNextInstanceHour"]
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT15M"
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "0",
+          "MaxBatchSize": "1",
+          "PauseTime" : "PT15M",
+          "WaitOnResourceSignals": "true"
+        }
+      }
+    },
+
+    "TransactorLaunchConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "Comment" : "Install a simple application",
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+              "yum" : {
+                "wget"             : []
+              }
+            },
+
+            "files" : {
+              "/home/ec2-user/.ssh/authorized_keys" : {
+                "content" : { "Fn::Join" : ["", [
+                  { "Fn::FindInMap" : [ "Admins", "gerstree", "sshPublicKey"] }, "\n",
+                  { "Fn::FindInMap" : [ "Admins", "mitkuijp", "sshPublicKey"] }, "\n",
+                  { "Fn::FindInMap" : [ "Admins", "matstijl", "sshPublicKey"] }, "\n",
+                  { "Fn::FindInMap" : [ "Admins", "tomtheun", "sshPublicKey"] }, "\n"
+                ]] },
+                "mode" : "000600",
+                "owner" : "ec2-user",
+                "group" : "ec2-user"
+              },
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource TransactorLaunchConfig ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]}
+              }
+            },
+
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true",
+                  "files" : ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]}
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : {
+          "Fn::FindInMap" : [ "ECSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "TransactorInstanceType" }, "Arch" ] } ]
+        },
+        "SecurityGroups" : [ { "Ref" : "SSHSecurityGroup" }, { "Ref" : "TransactorSecurityGroup" }, { "Fn::If" : [ "Test", { "Ref" : "TransactorUserAccessSecurityGroup" }, { "Ref" : "AWS::NoValue" }]} ],
+        "InstanceType" : { "Ref" : "TransactorInstanceType" },
+        "IamInstanceProfile": { "Ref": "TransactorInstanceProfile" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1", "\n",
+          "yum install -y aws-cfn-bootstrap", "\n",
+
+          "yum install -y aws-cli", "\n",
+          "aws s3 cp s3://third-party-releases/ecs.config /etc/ecs/ecs.config", "\n",
+
+          "/opt/aws/bin/cfn-init -v ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource TransactorLaunchConfig ",
+          "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+          "echo ECS_CLUSTER=", {"Ref": "DatomicCluster"}, " >> /etc/ecs/ecs.config", "\n",
+
+          "/opt/aws/bin/cfn-signal --success true ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource TransactorGroup ",
+          "         --region ", { "Ref" : "AWS::Region" }, "\n"
+
+        ]]}}
+      }
+    },
+
+    "DatomicCluster" : {
+      "Type" : "AWS::ECS::Cluster"
+    },
+
+    "DatomicService": {
+      "Type": "AWS::ECS::Service",
+      "DependsOn" : [ "TransactorGroup"],
+      "Properties" : {
+        "Cluster": { "Ref": "DatomicCluster" },
+        "DesiredCount": 1,
+        "TaskDefinition" : { "Ref":"DatomicTask" }
+      }
+    },
+
+    "DatomicTask" : {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties" : {
+        "ContainerDefinitions" : [
+          {
+            "Name": "datomic",
+            "MountPoints": [],
+            "Image":"avisi/datomic:0.9.5350-3",
+            "Cpu": "10",
+            "Environment" : [
+              { "Name" : "licenseKey", "Value" : "evVCPfoHl1frXjV7xlppZis/S5Y34UqadWwIYqzzk8hvSSViIGgZhjcPryHIMobWg92wj7HXqLnoQ2C430ICbkLRREVvblPYPB0arh11XptkA+46Cd8iXxLSL2BZDEU99rEniXKFuKT94VewOXRkGKOk2uK75L/s2kJT6EKdSCrmltfpp1GWPHXeoR6q9WcwtLyFZ7MImXgtS+cjMC6RvgcsZIAcABdlJMWnJYQlkX7u6Hx7Tn2pK02RlQCMC+hzUWz2dmeaz/OADKtwwlPT8UjIqkuBcbtgq2FH96BtCkNhRd9kalLJlB4yblh7jBVRjS+HaHKGMv43xBKrBkRkPA==" },
+              { "Name" : "altHost", "Value": { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "AltHost"] } },
+              { "Name" : "awsDynamodbTable", "Value": { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "DatabaseTableName"] } },
+              { "Name" : "awsDynamodbRegion", "Value": { "Ref" : "AWS::Region" }},
+              { "Name" : "awsTransactorRole", "Value": { "Ref" : "TransactorRole" }},
+              { "Name" : "awsPeerRole", "Value": { "Ref" : "ApplicationRole" }},
+              { "Name" : "memoryIndexThreshold", "Value": "32m" },
+              { "Name" : "memoryIndexMax", "Value": "512m" },
+              { "Name" : "objectCacheMax", "Value": "1g" },
+              { "Name" : "Xmx", "Value": "3g" },
+              { "Name" : "Xms", "Value": "3g" }
+            ],
+            "PortMappings":[
+              { "ContainerPort": 4334, "HostPort": 4334 },
+              { "ContainerPort": 4335, "HostPort": 4335 },
+              { "ContainerPort": 4336, "HostPort": 4336 }
+            ],
+            "Memory":"3500",
+            "Essential": "true"
+          }],
+        "Volumes": [
+          {
+            "Name": "my-vol"
+          }]
+      }
+    },
+
+    "DatomicBackupService": {
+      "Type": "AWS::ECS::Service",
+      "DependsOn" : [ "TransactorGroup"],
+      "Properties" : {
+        "Cluster": { "Ref": "DatomicCluster" },
+        "DesiredCount": 0,
+        "TaskDefinition" : { "Ref":"DatomicBackupTask" }
+      }
+    },
+
+    "DatomicBackupTask" : {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties" : {
+        "ContainerDefinitions" : [
+          {
+            "Name": "datomic-backup",
+            "Command" : [ "bin/datomic", "backup-db", { "Fn::Join" : [ "",  [ "datomic:ddb://us-east-1/", { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "DatabaseTableName"] }, "/relations" ]] }, { "Fn::Join" : [ "", [  "s3://", { "Ref" : "BackupBucket" }, "/", {  "Ref" : "AWS::StackName" } ]] } ],
+            "Image":"avisi/datomic:0.9.5350-1",
+            "Cpu": "10",
+            "Memory":"3500"
+          }],
+        "Volumes": [
+          {
+            "Name": "my-vol"
+          }]
+      }
+    },
+
+    "ElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "LoadBalancerName" : { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "LoadBalancerName"] },
+        "AvailabilityZones" : { "Fn::GetAZs" : "" },
+        "CrossZone" : "true",
+        "Listeners" : [
+          {
+            "LoadBalancerPort" : "443",
+            "InstancePort" : "3000",
+            "Protocol" : "HTTPS",
+            "SSLCertificateId" : { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "CertificateArn"] },
+            "PolicyNames" : [
+              "StayWithMe"
+            ]
+          }
+        ],
+        "LBCookieStickinessPolicy" : [
+          {
+            "PolicyName" : "StayWithMe"
+          }
+        ],
+        "HealthCheck" : {
+          "Target" : "HTTP:3000/atlassian-connect.json",
+          "HealthyThreshold" : "3",
+          "UnhealthyThreshold" : "5",
+          "Interval" : "30",
+          "Timeout" : "5"
+        }
+      }
+    },
+
+    "SSHSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security group that allows SSH from certain Avisi IP addresses",
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "vpn", "ip" ] }
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "office-fiber", "ip" ] }
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "office-adsl", "ip" ] }
+          }
+        ]
+      }
+    },
+
+    "InstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security group for the web/app layer",
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "3000",
+            "ToPort" : "3000",
+            "SourceSecurityGroupName" : {"Fn::GetAtt" : ["ElasticLoadBalancer", "SourceSecurityGroup.GroupName"]}
+          }
+        ]
+      }
+    },
+
+    "StatsSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security group for accessing the stats page on the web/app layer",
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "3999",
+            "ToPort" : "3999",
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "vpn", "ip" ] }
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "3999",
+            "ToPort" : "3999",
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "office-fiber", "ip" ] }
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "3999",
+            "ToPort" : "3999",
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "office-adsl", "ip" ] }
+          }
+        ]
+      }
+    },
+
+    "TransactorSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "Security group for the transactors",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 4334,
+            "ToPort": 4334,
+            "SourceSecurityGroupName" : { "Ref" : "InstanceSecurityGroup" }
+          }
+        ]
+      }
+    },
+
+    "TransactorUserAccessSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "Security group for user access to the transactor",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : 4334,
+            "ToPort" : 4334,
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "vpn", "ip" ] }
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : 4334,
+            "ToPort" : 4334,
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "office-fiber", "ip" ] }
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : 4334,
+            "ToPort" : 4334,
+            "CidrIp" : { "Fn::FindInMap" : [ "AvisiIPAdresses", "office-adsl", "ip" ] }
+          }
+        ]
+      }
+    },
+
+    "ApplicationRole" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Effect": "Allow",
+              "Sid": ""
+            }
+          ]
+        }
+      }
+    },
+
+    "DeploymentRole" :{
+      "Type" : "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Principal": {
+                "Service": "codedeploy.us-east-1.amazonaws.com"
+              },
+              "Effect": "Allow",
+              "Sid": ""
+            }
+          ]
+        },
+        "ManagedPolicyArns": ["arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"]
+      }
+    },
+
+    "ApplicationRolePolicyS3": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "ApplicationRolePolicyS3",
+        "PolicyDocument": {
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": [
+              "s3:List*",
+              "s3:Get*"
+            ],
+            "Resource": "*"
+          } ]
+        },
+        "Roles": [ {
+          "Ref": "ApplicationRole"
+        } ]
+      }
+    },
+
+    "ApplicationRolePolicyDynamoReadOnlyAccess": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "DynamoDbReadOnlyAccess",
+        "PolicyDocument": {
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": [
+              "dynamodb:GetItem",
+              "dynamodb:BatchGetItem",
+              "dynamodb:Scan",
+              "dynamodb:Query"
+            ],
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:dynamodb:*:", { "Ref" : "AWS::AccountId" }, ":table/", { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "DatabaseTableName"] } ] ]}
+          } ]
+        },
+        "Roles": [ {
+          "Ref": "ApplicationRole"
+        } ]
+      }
+    },
+
+    "ApplicationRolePolicyCloudWatchLogs": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "CloudWatchLogs",
+        "PolicyDocument" : {
+          "Statement": [ {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": [
+                "arn:aws:logs:*:*:*"
+              ]
+            } ]
+        },
+        "Roles": [ {
+          "Ref": "ApplicationRole"
+        } ]
+      }
+    },
+
+    "ApplicationInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [ {
+          "Ref": "ApplicationRole"
+        } ]
+      }
+    },
+
+    "TransactorRole" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Effect": "Allow",
+              "Sid": ""
+            }
+          ]
+        }
+      }
+    },
+
+    "ECSRolePolicyECS": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "ECSInstance",
+        "PolicyDocument": {
+          "Statement": [ {
+            "Effect": "Allow",
+              "Action": [
+                "ecs:CreateCluster",
+                "ecs:DeregisterContainerInstance",
+                "ecs:DiscoverPollEndpoint",
+                "ecs:Poll",
+                "ecs:RegisterContainerInstance",
+                "ecs:StartTelemetrySession",
+                "ecs:Submit*"
+            ],
+            "Resource": "*"
+          } ]
+        },
+        "Roles": [ {
+          "Ref": "TransactorRole"
+        } ]
+      }
+    },
+
+    "TransactorRolePolicyS3": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "TransactorRolePolicyS3",
+        "PolicyDocument": {
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": [
+              "s3:List*",
+              "s3:Get*"
+            ],
+            "Resource": "*"
+          } ]
+        },
+        "Roles": [ {
+          "Ref": "TransactorRole"
+        } ]
+      }
+    },
+
+    "FileStorePolicyS3": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "FileStorePolicyS3",
+        "PolicyDocument": {
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": [
+              "s3:*"
+            ],
+            "Resource": [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "FileStoreBucket" } ] ] },
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "FileStoreBucket" } , "/*" ] ] }
+            ]
+          } ]
+        },
+        "Roles": [ {
+          "Ref": "ApplicationRole"
+        } ]
+      }
+    },
+
+    "QueueDripOnePolicy" : {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "QueueDripOnePolicy",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "sqs:ListQueues"
+              ],
+              "Resource": [
+                "arn:aws:sqs:*"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage"
+              ],
+              "Resource": [
+                { "Fn::GetAtt":[ "DripOneQueue", "Arn" ] }
+              ]
+            }
+          ]
+        },
+        "Roles": [ {
+          "Ref": "ApplicationRole"
+        } ]
+      }
+    },
+
+    "BackupPolicyS3": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "BackupPolicyS3",
+        "PolicyDocument": {
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": [
+              "s3:*"
+            ],
+            "Resource": [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "BackupBucket" } ] ] },
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "BackupBucket" } , "/*" ] ] }
+            ]
+          } ]
+        },
+        "Roles": [ {
+          "Ref": "TransactorRole"
+        } ]
+      }
+    },
+
+    "TransactorRolePolicyDynamoDbAccess": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName" : "DynamoDbAccess",
+        "PolicyDocument": {
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": [
+              "dynamodb:*"
+            ],
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:dynamodb:*:", { "Ref" : "AWS::AccountId" }, ":table/", { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "DatabaseTableName"] } ] ]}
+          } ]
+        },
+        "Roles": [ {
+          "Ref": "TransactorRole"
+        } ]
+      }
+    },
+
+    "TransactorInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [ {
+          "Ref": "TransactorRole"
+        } ]
+      }
+    },
+
+    "BackupBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, "-rfj-backup" ]] }
+      },
+      "DeletionPolicy" : "Retain"
+    },
+
+    "FileStoreBucketPolicy" : {
+      "Type" : "AWS::S3::BucketPolicy",
+      "Properties" : {
+        "PolicyDocument" : {
+          "Statement": [
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Resource": [
+                { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "FileStoreBucket" } , "/*" ]]}
+              ],
+              "Principal": "*"
+            }
+          ]
+        },
+        "Bucket" : { "Ref" : "FileStoreBucket" }
+      }
+    },
+
+    "FileStoreBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, "-rfj-files" ]] }
+      },
+      "DeletionPolicy" : "Retain"
+    },
+
+    "StableDNSName" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Condition" : "Production",
+      "DependsOn" : "ElasticLoadBalancer",
+      "Properties" : {
+        "HostedZoneName": "relationsforjira.com.",
+        "AliasTarget": {
+          "HostedZoneId": { "Fn::GetAtt" : [ "ElasticLoadBalancer", "CanonicalHostedZoneNameID" ]},
+          "EvaluateTargetHealth": false,
+          "DNSName": { "Fn::Join" : ["", [ { "Fn::GetAtt" : [ "ElasticLoadBalancer", "CanonicalHostedZoneName" ]} ] ] }
+        },
+        "Type": "A",
+        "Name": "app.relationsforjira.com."
+      }
+    },
+
+    "TestStableDNSName" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Condition" : "Test",
+      "DependsOn" : "ElasticLoadBalancer",
+      "Properties" : {
+        "HostedZoneName": "relationsforjira.com.",
+        "AliasTarget": {
+          "HostedZoneId": { "Fn::GetAtt" : [ "ElasticLoadBalancer", "CanonicalHostedZoneNameID" ]},
+          "EvaluateTargetHealth": false,
+          "DNSName": { "Fn::Join" : ["", [ { "Fn::GetAtt" : [ "ElasticLoadBalancer", "CanonicalHostedZoneName" ]} ] ] }
+        },
+        "Type": "A",
+        "Name": "test.relationsforjira.com."
+      }
+    },
+
+    "DynamoDBWriteCapacityAlarm" : {
+      "Type" : "AWS::CloudWatch::Alarm",
+      "Properties" : {
+        "Namespace" : "AWS/DynamoDB",
+        "MetricName" : "ConsumedWriteCapacityUnits",
+        "Dimensions" : [
+          {
+            "Name" : "TableName",
+            "Value" : { "Fn::FindInMap" : [ "Environments", { "Ref" : "AWS::StackName" } , "DatabaseTableName"] }
+          }
+        ],
+        "Statistic" : "Average",
+        "Period" : 300,
+        "EvaluationPeriods" : 1,
+        "Threshold" : 20.0,
+        "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+        "AlarmActions" : [
+          { "Ref" : "CriticalCloudWatchAlarmTopic" }
+        ]
+      }
+    },
+
+    "CriticalCloudWatchAlarmTopic" : {
+       "Type" : "AWS::SNS::Topic",
+       "Properties" : {
+          "Subscription" : [
+             { "Endpoint" : "t.p.theunissen@avisi.nl", "Protocol" : "email" },
+             { "Endpoint" : "g.j.streek@avisi.nl", "Protocol" : "email" },
+             { "Endpoint" : "m.kuijpers@avisi.nl", "Protocol" : "email" }
+          ]
+       }
+    },
+
+    "DripOneQueue" : {
+      "Type" : "AWS::SQS::Queue",
+      "Properties" : {
+        "QueueName" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, "-drip-one" ]] },
+        "DelaySeconds" : "30",
+        "RedrivePolicy" : {
+          "deadLetterTargetArn" : {"Fn::GetAtt" : [ "DripOneDLQueue" , "Arn" ]},
+          "maxReceiveCount" : 3
+        }
+      }
+    },
+
+    "DripOneDLQueue" : {
+      "Type" : "AWS::SQS::Queue",
+      "Properties" : {
+        "QueueName" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, "-drip-one-dl" ]] }
+      }
+    }
+
+  },
+
+  "Outputs" : {
+    "CodeDeployCreate" : {
+      "Description" : "The create commands for CodeDeploy",
+      "Value" :  { "Fn::Join" : [ "", [ "aws deploy create-application --application-name ", { "Ref" : "AWS::StackName" }, "Relations ; ", "aws deploy create-deployment-group --deployment-group-name ", { "Ref" : "AWS::StackName" }, "RelationsGroup --application-name ", { "Ref" : "AWS::StackName" }, "Relations --deployment-config-name CodeDeployDefault.OneAtATime --auto-scaling-groups ", { "Ref" : "WebServerGroup" }, " --service-role-arn ", { "Fn::GetAtt" : [ "DeploymentRole", "Arn" ]}]]}
+    },
+    "CodeDeployUpdate" : {
+      "Description" : "The update command for CodeDeploy, in case your stack changes ",
+      "Value" :  { "Fn::Join" : [ "", [ "aws deploy update-deployment-group --current-deployment-group-name ", { "Ref" : "AWS::StackName" }, "RelationsGroup --application-name ", { "Ref" : "AWS::StackName" }, "Relations --deployment-config-name CodeDeployDefault.OneAtATime --auto-scaling-groups ", { "Ref" : "WebServerGroup" }, " --service-role-arn ", { "Fn::GetAtt" : [ "DeploymentRole", "Arn" ]}]]}
+    }
+  }
+
+}
